@@ -1,4 +1,6 @@
 import cv2
+import numpy as np
+
 from hough_transform import *
 from itertools import product
 
@@ -47,6 +49,12 @@ def test_calculate_horizontal_line_response():
     assert response == 1.0
     response = calculate_horizontal_line_response(image, (12, 258), 0, 256)
     assert response == -2.0
+    response = calculate_horizontal_line_response(image, (512, 512), 45, 512)
+    assert response == 0.0
+    response = calculate_horizontal_line_response(image, (511, 511), 45, 512)
+    assert response == 2.0
+    response = calculate_horizontal_line_response(image, (514, 514), 45, 512)
+    assert np.isclose(response, -4.0)
 
 
 def test_blank_ruled_paper():

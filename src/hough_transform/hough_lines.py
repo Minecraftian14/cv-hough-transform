@@ -126,8 +126,8 @@ def generate_test_sample(
 
 def draw_horizontal_line(image, position, alpha, distance, thickness):
     height, width = image.shape
-    alpha = -alpha # Image coords are in fouth quadrant
-    alpha = np.deg2rad(alpha) # Numpy uses Radian, and my brain favours degrees
+    alpha = -alpha  # Image coords are in fouth quadrant
+    alpha = np.deg2rad(alpha)  # Numpy uses Radian, and my brain favours degrees
     c = distance - np.tan(alpha) * (width / 2)
     cv2.line(image,
              (0, round(c)),
@@ -138,7 +138,7 @@ def draw_horizontal_line(image, position, alpha, distance, thickness):
 
 def calculate_horizontal_line_response(image, pixel, alpha, distance):
     height, width = image.shape
-    alpha = np.deg2rad(alpha)
+    alpha = np.deg2rad(-alpha)
     c = distance - np.tan(alpha) * (width / 2)
     return np.tan(alpha) * pixel[0] + c - pixel[1]
 
