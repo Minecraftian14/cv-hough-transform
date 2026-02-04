@@ -15,13 +15,16 @@ def set_seed(seed_string):
     random.seed(seed)
     np.random.seed(seed)
 
-def blank_ruled_paper(seed, H=1024, W=768):
+def blank_ruled_paper(seed, H=1024, W=768, return_truth=False):
     set_seed(seed)
     img = np.ones((H, W), dtype=np.uint8) * 255
     spacing = random.randint(30, 50)
 
     for y in range(50, H, spacing):
         cv2.line(img, (50, y), (W - 50, y), 0, 2)
+
+    if return_truth:
+        return img, len(range(50, H, spacing))
 
     return img
 
