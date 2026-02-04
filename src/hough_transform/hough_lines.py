@@ -109,6 +109,40 @@ def get_horizontal_lines(
     return results
 
 
+def generate_test_sample(
+        size=1024,
+        location=(0.5, 0.5),
+        rotation=0,
+        thickness=2,
+):
+    # Image is in yx plane
+    # OpenCV is in xy plane
+    image = np.ones((size, size), dtype=np.uint8) * 255
+    position = (int(size * location[0]), int(size * location[1]))
+    distance = position[1] - (size / 2 - position[0]) * np.tan(np.deg2rad(rotation))
+    image = draw_horizontal_line(image, position, rotation, distance, thickness)
+    return image
+
+
+def draw_horizontal_line(image, position, alpha, distance, thickness):
+    height, width = image.shape
+    alpha = -alpha # Image coords are in fouth quadrant
+    alpha = np.deg2rad(alpha) # Numpy uses Radian, and my brain favours degrees
+    c = distance - np.tan(alpha) * (width / 2)
+    cv2.line(image,
+             (0, round(c)),
+             (width, round(np.tan(alpha) * width + c)),
+             0, thickness)
+    return image
+
+
+def calculate_horizontal_line_response(image, pixel, alpha, distance):
+    height, width = image.shape
+    alpha = np.deg2rad(alpha)
+    c = distance - np.tan(alpha) * (width / 2)
+    return np.tan(alpha) * pixel[0] + c - pixel[1]
+
+
 def count_hough_lines(img, algorithm='HORIZONTAL_FOCUS', **kwargs):
     if algorithm == 'HORIZONTAL_FOCUS':
         return len(get_horizontal_lines(img, **kwargs))
