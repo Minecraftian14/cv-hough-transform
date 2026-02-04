@@ -139,8 +139,12 @@ def draw_horizontal_line(image, position, alpha, distance, thickness):
 def calculate_horizontal_line_response(image, pixel, alpha, distance):
     height, width = image.shape
     alpha = np.deg2rad(-alpha)
-    c = distance - np.tan(alpha) * (width / 2)
-    return np.tan(alpha) * pixel[0] + c - pixel[1]
+    m = np.tan(alpha)
+    c = distance - m * (width / 2)
+    # 0 = mx - y + c
+    # d = | m lx - ly + c | / ( m^2 + 1 )^.5
+    # Imma remove the mod and return the sign to note where the point is
+    return (m * pixel[0] + c - pixel[1]) / (m * m + 1) ** 0.5
 
 
 def count_hough_lines(img, algorithm='HORIZONTAL_FOCUS', **kwargs):
