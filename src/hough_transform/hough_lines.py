@@ -10,18 +10,13 @@ def my_roll_number():
 def draw_horizontal_lines(image, lines):
     """
     :param image:
-    :param lines: List of tuples of (alpha, distance)
+    :param lines: List of tuples of (alpha, distance, thickness?)
     :return: image
     """
     height, width = image.shape
     for line in lines:
-        alpha, distance = line
-        alpha = np.deg2rad(alpha)
-        c = distance - np.tan(alpha) * (width / 2)
-        cv2.line(image,
-                 (0, round(c)),
-                 (width, round(np.tan(alpha) * width + c)),
-                 0, 2)
+        alpha, distance, thickness = line[0], line[1], line[2] if len(line) >= 3 else 2
+        draw_horizontal_line(image, alpha, distance, thickness)
     return image
 
 
@@ -36,13 +31,24 @@ def is_point_of_interest(
     return value < 0.5
 
 
+def generate_parameter_space_basis(
+        height,
+        alpha_variance=5.0, alpha_sample_size=11,
+        distance_sample_size_factor=1.0,
+):
+    l_alpha = np.linspace(-alpha_variance, alpha_variance, alpha_sample_size)
+    l_distance = np.linspace(0, height, int(height * distance_sample_size_factor + 1))
+    return {'l_alpha': l_alpha, 'l_distance': l_distance}
+
+
 def get_horizontal_lines(
         input_image,
         alpha_variance=5.0, alpha_sample_size=11,
         distance_sample_size_factor=1.0,
         threshold=10,
 
-        return_parameter_space=False
+        return_parameter_space=False,
+        return_parameter_space_hist=False,
 ):
     """
     A more specialized version of Hough Transform for Line Detection.
@@ -74,17 +80,14 @@ def get_horizontal_lines(
     :param alpha_sample_size:
     :param distance_sample_size_factor:
     :param threshold:
+    :param return_parameter_space:
+    :param return_parameter_space_hist:
     :return:
     """
     height, width = input_image.shape
-    l_alpha = np.linspace(-alpha_variance, alpha_variance, alpha_sample_size)
-    l_distance = np.linspace(0, height, int(height * distance_sample_size_factor + 1))
-
-    print(l_alpha, l_alpha.shape)
-    print(l_distance, l_distance.shape)
-
-    n_alpha = len(l_alpha)
-    n_distance = len(l_distance)
+    parameter_space_basis = generate_parameter_space_basis(height, alpha_variance, alpha_sample_size, distance_sample_size_factor)
+    l_alpha, l_distance = parameter_space_basis['l_alpha'], parameter_space_basis['l_distance']
+    n_alpha, n_distance = len(l_alpha), len(l_distance)
 
     parameter_space_hist = np.zeros(shape=(n_alpha, n_distance), dtype=np.int32)
 
@@ -95,16 +98,23 @@ def get_horizontal_lines(
             if not is_point_of_interest(value, average_energy=average_energy): continue
             for i_alpha in range(n_alpha):
                 for i_distance in range(n_distance):
-                    alpha, distance = np.deg2rad(l_alpha[i_alpha]), l_distance[i_distance]
-                    c = distance - np.tan(alpha) * (width / 2)
-                    # y = tan(alpha) x + c
-                    if np.abs(y_h - np.tan(alpha) * x_w - c) < threshold:
-                        parameter_space_hist[i_alpha, i_distance] += 1
+                    # alpha, distance = np.deg2rad(l_alpha[i_alpha]), l_distance[i_distance]
+                    # c = distance - np.tan(alpha) * (width / 2)
+                    # # y = tan(alpha) x + c
+                    # if np.abs(y_h - np.tan(alpha) * x_w - c) < threshold:
+                    #     parameter_space_hist[i_alpha, i_distance] += 1
+                    alpha, distance = l_alpha[i_alpha], l_distance[i_distance]
+                    response = calculate_horizontal_line_response(input_image, (x_w, y_h), alpha, distance)
+                    response=np.abs(response)
+                    if response < threshold:
+                        parameter_space_hist[i_alpha, i_distance] += response
 
     results = {}
     results['lines'] = []
     if return_parameter_space:
         results['parameter_space'] = {'l_alpha': l_alpha, 'l_distance': l_distance}
+    if return_parameter_space_hist:
+        results['parameter_space_hist'] = parameter_space_hist
 
     return results
 
@@ -120,11 +130,11 @@ def generate_test_sample(
     image = np.ones((size, size), dtype=np.uint8) * 255
     position = (int(size * location[0]), int(size * location[1]))
     distance = position[1] - (size / 2 - position[0]) * np.tan(np.deg2rad(rotation))
-    image = draw_horizontal_line(image, position, rotation, distance, thickness)
+    image = draw_horizontal_line(image, rotation, distance, thickness)
     return image
 
 
-def draw_horizontal_line(image, position, alpha, distance, thickness):
+def draw_horizontal_line(image, alpha, distance, thickness):
     height, width = image.shape
     alpha = -alpha  # Image coords are in fouth quadrant
     alpha = np.deg2rad(alpha)  # Numpy uses Radian, and my brain favours degrees
@@ -149,5 +159,5 @@ def calculate_horizontal_line_response(image, pixel, alpha, distance):
 
 def count_hough_lines(img, algorithm='HORIZONTAL_FOCUS', **kwargs):
     if algorithm == 'HORIZONTAL_FOCUS':
-        return len(get_horizontal_lines(img, **kwargs))
+        return len(get_horizontal_lines(img, **kwargs)['lines'])
     raise ValueError("Unknown algorithm: {}".format(algorithm))

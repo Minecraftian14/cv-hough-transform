@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 from hough_transform import *
 from itertools import product
@@ -57,17 +58,39 @@ def test_calculate_horizontal_line_response():
     assert np.isclose(response, - 8 ** 0.5)
 
 
+def test_draw_horizontal_lines():
+    image = blank_ruled_paper("test_draw_horizontal_lines", H=300, W=200)
+    parameter_space_basis = generate_parameter_space_basis(300, 5, 3, 0.05)
+    parameter_space = list(product(parameter_space_basis['l_alpha'], parameter_space_basis['l_distance']))
+    parameter_space = [(alpha, distance, 1) for alpha, distance in parameter_space]
+    image = draw_horizontal_lines(image, parameter_space)
+    # Should see 16 triplets
+    cv2.imshow("lined_image", image)
+    cv2.waitKey(0)
+
+
 def test_blank_ruled_paper():
-    image, truth = blank_ruled_paper("test_blank_ruled_paper", H=300, W=200, return_truth=True)
+    # image, truth = blank_ruled_paper("test_blank_ruled_paper", H=300, W=200, return_truth=True)
+    image = handwritten_paper("test_blank_ruled_paper", "Anirudh Sharma", "MT2025732", H=600, W=600)
     print()
 
-    cv2.imshow("image", image)
-    cv2.waitKey(0)
+    result = get_horizontal_lines(image, -6, 11, 1 / 5, return_parameter_space=True, return_parameter_space_hist=True, threshold=5)
+    l_alpha, l_distance = result['parameter_space']['l_alpha'], result['parameter_space']['l_distance']
+    histogram = np.asarray(result['parameter_space_hist'])
 
-    # prediction = count_hough_lines(image)
-    result = get_horizontal_lines(image, distance_sample_size_factor=0.5, return_parameter_space=True)
-    parameter_space = list(product(result['parameter_space']['l_alpha'], result['parameter_space']['l_distance']))
-    lined_image = draw_horizontal_lines(image, parameter_space)
-    cv2.imshow("lined_image", lined_image)
-    cv2.waitKey(0)
+    print(histogram.shape)
+
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].imshow(image)
+    axs[1].set_title("Parameter Space Histogram")
+    axs[1].imshow(histogram, aspect='auto')
+    axs[1].set_ylabel("Alpha")
+    axs[1].set_yticks(range(len(l_alpha)), map(lambda x: "%.1f" % x, l_alpha))
+    axs[1].set_xlabel("Distance")
+    # axs[1].set_xticks(range(len(l_distance)), map(str, l_distance))
+    axs[1].legend()
+    # pcm = axs[1].pcolormesh(histogram, cmap='viridis')
+    # fig.colorbar(pcm, ax=axs[1], shrink=0.6)  # wtf?
+    plt.show()
+
     # assert truth == prediction
