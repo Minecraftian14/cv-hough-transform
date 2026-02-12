@@ -1,5 +1,2 @@
 .idea/
-**/*.egg-info/
-**/__pycache__/
 secret_*.*
-target/
