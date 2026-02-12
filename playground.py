@@ -1,11 +1,11 @@
-from .data_generator import *
-from .hough_lines import *
+from data_generator import *
+from hough_lines import *
 
 #define my_roll_number and implement count_hough_lines is hough_lines.py
 
 def test():
     roll = my_roll_number()
-    name = "Anirudh Sharma"
+    name = "Biplab"
 
     img1 = blank_ruled_paper(roll)
     img2 = printed_paper(roll, name, roll)
