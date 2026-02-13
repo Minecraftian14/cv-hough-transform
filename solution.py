@@ -75,8 +75,8 @@ def generate_paper(
         np.random.seed(seed)
 
     if text is None:
-        indices = np.random.randint(0, len(lorem_ipsum), (1000,))
-        words = lorem_ipsum[indices]
+        words = lorem_ipsum.copy()
+        rd.shuffle(words)
     else:
         words = text.split(" ")
 
