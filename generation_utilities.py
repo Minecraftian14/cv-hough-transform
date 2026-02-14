@@ -27,10 +27,6 @@ def lerp2D(a, b, f):
     return lerp1D(a[0], b[0], f), lerp1D(a[1], b[1], f)
 
 
-def draw_line(image, pt1, pt2):
-    ...
-
-
 def generate_paper(
         # Base Parameters
         seed: int = None,
