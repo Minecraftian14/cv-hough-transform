@@ -6,7 +6,7 @@ from hough_lines import *
 
 def test():
     roll = my_roll_number()
-    name = "Biplab"
+    name = "Anirudh"
 
     img1 = blank_ruled_paper(roll)
     img2 = printed_paper(roll, name, roll)
