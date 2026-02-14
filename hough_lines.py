@@ -18,7 +18,7 @@ def count_hough_lines(image,
                       hough_min_line_length=0.5,
                       hough_max_line_gap=0.104,
                       horizontal_line_tolerance=5,
-                      merging_tolerance=0.016,
+                      merging_tolerance=0.02,
                       return_intermediate_steps=False,
                       *args, **kwargs):
     # Numpy-ize the input for its rich api
@@ -39,7 +39,7 @@ def count_hough_lines(image,
     if return_intermediate_steps: intermediate_steps['thresholded'] = thresh
 
     # Morph the image to reduce non-horizontal artifacts
-    kernel_length = width // 25
+    kernel_length = width // morphing_factor
     horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_length, 3))
     morphed = 255 - cv2.morphologyEx(thresh, cv2.MORPH_OPEN, horizontal_kernel)
     if return_intermediate_steps: intermediate_steps['morphed'] = morphed
